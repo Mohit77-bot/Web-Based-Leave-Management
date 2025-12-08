@@ -1,0 +1,185 @@
+import json
+import os
+from datetime import datetime, timedelta
+from prettytable import PrettyTable
+
+DATA_FILE = "data/employees.json"
+
+# -----------------------------
+#  Utility Functions
+# -----------------------------
+load_data():
+    """Load employee data from JSON file."""
+    if not os.path.exists(DATA_FILE):
+        return {}
+    with open(DATA_FILE, "r") as f:
+        return json.load(f)
+
+def save_data(data):
+    """Save employee data to JSON file."""
+    with open(DATA_FILE, "w") as f:
+        json.dump(data, f, indent=4)
+
+# -----------------------------
+#  Core Functions
+# -----------------------------
+
+def add_employee():
+    data = load_data()
+    emp_id = input("Enter Employee ID: ")
+    if emp_id in data:
+        print("⚠️ Employee ID already exists.")
+        return
+
+    name = input("Enter Employee Name: ")
+    dept = input("Enter Department: ")
+    total_leaves = 20  # yearly leaves
+    data[emp_id] = {
+        "name": name,
+        "department": dept,
+        "total_leaves": total_leaves,
+        "leaves_taken": 0,
+        "leave_history": []
+    }
+
+    save_data(data)
+    print("✅ Employee added successfully!")
+
+def view_employees():
+    data = load_data()
+    if not data:
+        print("No employees found.")
+        return
+    table = PrettyTable(["ID", "Name", "Department", "Total Leaves", "Leaves Taken"])
+    for emp_id, info in data.items():
+        table.add_row([emp_id, info["name"], info["department"], info["total_leaves"], info["leaves_taken"]])
+    print(table)
+
+def apply_leave():
+    data = load_data()
+    emp_id = input("Enter your Employee ID: ")
+    if emp_id not in data:
+        print("❌ Employee not found.")
+        return
+
+    emp = data[emp_id]
+    try:
+        start_date = datetime.strptime(input("Enter Leave Start Date (YYYY-MM-DD): "), "%Y-%m-%d")
+        end_date = datetime.strptime(input("Enter Leave End Date (YYYY-MM-DD): "), "%Y-%m-%d")
+    except ValueError:
+        print("⚠️ Invalid date format.")
+        return
+
+    days = (end_date - start_date).days + 1
+    if days <= 0:
+        print("⚠️ Invalid date range.")
+        return
+
+    if emp["leaves_taken"] + days > emp["total_leaves"]:
+        print("❌ Not enough leave balance.")
+        return
+
+    reason = input("Enter Reason for Leave: ")
+    leave_entry = {
+        "start_date": start_date.strftime("%Y-%m-%d"),
+        "end_date": end_date.strftime("%Y-%m-%d"),
+        "days": days,
+        "reason": reason,
+        "status": "Pending"
+    }
+
+    emp["leave_history"].append(leave_entry)
+    save_data(data)
+    print("✅ Leave request submitted successfully (Pending approval).")
+
+def approve_leave():
+    data = load_data()
+    emp_id = input("Enter Employee ID to approve leave: ")
+    if emp_id not in data:
+        print("❌ Employee not found.")
+        return
+
+    emp = data[emp_id]
+    pending = [l for l in emp["leave_history"] if l["status"] == "Pending"]
+
+    if not pending:
+        print("No pending leave requests for this employee.")
+        return
+
+    print(f"\nPending Leaves for {emp['name']}:")
+    for i, leave in enumerate(pending, 1):
+        print(f"{i}. {leave['start_date']} to {leave['end_date']} ({leave['days']} days) — {leave['reason']}")
+
+    choice = int(input("\nEnter the number of the leave to approve/reject: ")) - 1
+    if 0 <= choice < len(pending):
+        action = input("Approve or Reject? (A/R): ").upper()
+        if action == "A":
+            pending[choice]["status"] = "Approved"
+            emp["leaves_taken"] += pending[choice]["days"]
+            print("✅ Leave Approved.")
+        elif action == "R":
+            pending[choice]["status"] = "Rejected"
+            print("❌ Leave Rejected.")
+        else:
+            print("⚠️ Invalid input.")
+    else:
+        print("⚠️ Invalid selection.")
+
+    save_data(data)
+
+def view_leave_history():
+    data = load_data()
+    emp_id = input("Enter Employee ID: ")
+    if emp_id not in data:
+        print("❌ Employee not found.")
+        return
+
+    emp = data[emp_id]
+    if not emp["leave_history"]:
+        print("No leave history found.")
+        return
+
+    table = PrettyTable(["Start", "End", "Days", "Reason", "Status"])
+    for leave in emp["leave_history"]:
+        table.add_row([leave["start_date"], leave["end_date"], leave["days"], leave["reason"], leave["status"]])
+    print(table)
+
+# -----------------------------
+#  MENU SYSTEM
+# -----------------------------
+
+def main_menu():
+    while True:
+        print("\n====== Leave Management System ======")
+        print("1. Add Employee")
+        print("2. View Employees")
+        print("3. Apply Leave")
+        print("4. Approve Leave")
+        print("5. View Leave History")
+        print("6. Exit")
+
+        choice = input("Enter your choice: ")
+
+        if choice == "1":
+            add_employee()
+        elif choice == "2":
+            view_employees()
+        elif choice == "3":
+            apply_leave()
+        elif choice == "4":
+            approve_leave()
+        elif choice == "5":
+            view_leave_history()
+        elif choice == "6":
+            print("Goodbye! 👋")
+            break
+        else:
+            print("⚠️ Invalid choice, please try again.")
+
+# -----------------------------
+#  MAIN EXECUTION
+# -----------------------------
+if __name__ == "__main__":
+    if not os.path.exists("data"):
+        os.makedirs("data")
+    main_menu()
