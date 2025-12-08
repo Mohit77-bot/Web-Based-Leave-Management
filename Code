@@ -28,7 +28,7 @@ def add_employee():
     data = load_data()
     emp_id = input("Enter Employee ID: ")
     if emp_id in data:
-        print("⚠️ Employee ID already exists.")
+        print(" Employee ID already exists.")
         return
 
     name = input("Enter Employee Name: ")
@@ -43,7 +43,7 @@ def add_employee():
     }
 
     save_data(data)
-    print("✅ Employee added successfully!")
+    print("Employee added successfully!")
 
 def view_employees():
     data = load_data()
@@ -59,7 +59,7 @@ def apply_leave():
     data = load_data()
     emp_id = input("Enter your Employee ID: ")
     if emp_id not in data:
-        print("❌ Employee not found.")
+        print("Employee not found.")
         return
 
     emp = data[emp_id]
@@ -67,16 +67,16 @@ def apply_leave():
         start_date = datetime.strptime(input("Enter Leave Start Date (YYYY-MM-DD): "), "%Y-%m-%d")
         end_date = datetime.strptime(input("Enter Leave End Date (YYYY-MM-DD): "), "%Y-%m-%d")
     except ValueError:
-        print("⚠️ Invalid date format.")
+        print("Invalid date format.")
         return
 
     days = (end_date - start_date).days + 1
     if days <= 0:
-        print("⚠️ Invalid date range.")
+        print("Invalid date range.")
         return
 
     if emp["leaves_taken"] + days > emp["total_leaves"]:
-        print("❌ Not enough leave balance.")
+        print("Not enough leave balance.")
         return
 
     reason = input("Enter Reason for Leave: ")
@@ -90,13 +90,13 @@ def apply_leave():
 
     emp["leave_history"].append(leave_entry)
     save_data(data)
-    print("✅ Leave request submitted successfully (Pending approval).")
+    print("Leave request submitted successfully (Pending approval).")
 
 def approve_leave():
     data = load_data()
     emp_id = input("Enter Employee ID to approve leave: ")
     if emp_id not in data:
-        print("❌ Employee not found.")
+        print("Employee not found.")
         return
 
     emp = data[emp_id]
@@ -116,14 +116,14 @@ def approve_leave():
         if action == "A":
             pending[choice]["status"] = "Approved"
             emp["leaves_taken"] += pending[choice]["days"]
-            print("✅ Leave Approved.")
+            print("Leave Approved.")
         elif action == "R":
             pending[choice]["status"] = "Rejected"
-            print("❌ Leave Rejected.")
+            print("Leave Rejected.")
         else:
-            print("⚠️ Invalid input.")
+            print("Invalid input.")
     else:
-        print("⚠️ Invalid selection.")
+        print("Invalid selection.")
 
     save_data(data)
 
@@ -131,7 +131,7 @@ def view_leave_history():
     data = load_data()
     emp_id = input("Enter Employee ID: ")
     if emp_id not in data:
-        print("❌ Employee not found.")
+        print("Employee not found.")
         return
 
     emp = data[emp_id]
@@ -171,10 +171,10 @@ def main_menu():
         elif choice == "5":
             view_leave_history()
         elif choice == "6":
-            print("Goodbye! 👋")
+            print("Goodbye! ")
             break
         else:
-            print("⚠️ Invalid choice, please try again.")
+            print(" Invalid choice, please try again.")
 
 # -----------------------------
 #  MAIN EXECUTION
@@ -183,3 +183,4 @@ if __name__ == "__main__":
     if not os.path.exists("data"):
         os.makedirs("data")
     main_menu()
+
